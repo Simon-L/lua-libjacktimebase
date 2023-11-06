@@ -11,5 +11,5 @@ It's very easy to use the library with C or just LuaJIT without the required lua
 
 # Building and running the test script:
 
-`make -Bbuild  -DBUILD_SHARED_LIBS=ON && cmake --build build --target run`
+`cmake -Bbuild  -DBUILD_SHARED_LIBS=ON && cmake --build build --target run`
 
