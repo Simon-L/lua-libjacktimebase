@@ -97,9 +97,9 @@ client_userdata_t *client_open(const char* name)
     }
     client_userdata_t *cli = malloc(sizeof(client_userdata_t));
     
-    cli->userdata.time_beats_per_bar = 7.0;
-    cli->userdata.time_beat_type = 8.0;
-    cli->userdata.time_beats_per_minute = 100.0;
+    cli->userdata.time_beats_per_bar = 4.0;
+    cli->userdata.time_beat_type = 4.0;
+    cli->userdata.time_beats_per_minute = 120.0;
     cli->userdata.time_reset = 1;
     
     cli->jack_client = client;
