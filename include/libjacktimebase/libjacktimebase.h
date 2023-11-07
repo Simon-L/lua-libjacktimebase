@@ -36,7 +36,7 @@ LIBJACKTIMEBASE_EXPORT void transport_toggle(client_userdata_t *client);
 LIBJACKTIMEBASE_EXPORT void transport_locate(client_userdata_t *client, jack_nframes_t frame);
 LIBJACKTIMEBASE_EXPORT int transport_start_timebase(client_userdata_t *client, int conditional);
 LIBJACKTIMEBASE_EXPORT void transport_release_timebase(client_userdata_t *client);
-LIBJACKTIMEBASE_EXPORT void transport_tb_set_tempo(client_userdata_t *client, int tempo);
+LIBJACKTIMEBASE_EXPORT void transport_tb_set_tempo(client_userdata_t *client, float tempo);
 
 #ifdef __cplusplus
 }  // extern "C"

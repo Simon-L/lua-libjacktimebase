@@ -62,9 +62,6 @@ void transport_locate(client_userdata_t *client, jack_nframes_t frame);
 int transport_start_timebase(client_userdata_t *client, int conditional);
 void transport_release_timebase(client_userdata_t *client);
 void transport_tb_set_tempo(client_userdata_t *client, int tempo);
-
-const char* exported_function(void);
-const void exported_function2();
 ]]
 
 local clib = ffi.load("libjacktimebase")
@@ -111,6 +108,16 @@ end
 
 function jack_client:current_position()
     return self.client_ptr.pos
+end
+
+function jack_client:set_beat_type(bt)
+    self.client_ptr.userdata.time_beat_type = bt
+    self.client_ptr.userdata.time_reset = 1
+end
+
+function jack_client:set_beats_per_bar(beats)
+    self.client_ptr.userdata.time_beats_per_bar = beats
+    self.client_ptr.userdata.time_reset = 1
 end
 
 function jack_client:start_timebase(conditional)
