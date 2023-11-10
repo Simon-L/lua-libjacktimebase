@@ -171,9 +171,3 @@ void transport_locate(client_userdata_t *client, jack_nframes_t frame)
 {
 	jack_transport_locate(client->jack_client, frame);
 }
-
-void transport_tb_set_tempo(client_userdata_t *client, float tempo)
-{
-    client->userdata.time_beats_per_minute = tempo;
-    client->userdata.time_reset = 1;
-}

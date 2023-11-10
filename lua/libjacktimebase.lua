@@ -61,10 +61,10 @@ void transport_locate(client_userdata_t *client, jack_nframes_t frame);
 
 int transport_start_timebase(client_userdata_t *client, int conditional);
 void transport_release_timebase(client_userdata_t *client);
-void transport_tb_set_tempo(client_userdata_t *client, int tempo);
 ]]
 
-local clib = ffi.load("libjacktimebase")
+local jacktimebasemodule = (jacktimebasemodule ~= nil) and jacktimebasemodule or 'libjacktimebase'
+local clib = ffi.load(jacktimebasemodule)
 local inspect = require("inspect")
 
 jack_client = {}
@@ -129,7 +129,8 @@ function jack_client:release_timebase()
 end
 
 function jack_client:set_tempo(tempo)
-    return clib.transport_tb_set_tempo(self.client_ptr, tempo)
+    self.client_ptr.userdata.time_beats_per_minute = tempo
+    self.client_ptr.userdata.time_reset = 1
 end
 
 return setmetatable({}, {

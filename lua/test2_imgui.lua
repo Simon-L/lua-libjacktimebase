@@ -2,12 +2,16 @@ local ffi = require"ffi"
 local app = require"pl.app"
 local app_path = app.require_here()
 app.require_here("lua")
+flags,args = app.parse_args()
 
 local inspect = require"inspect"
 local sdl = require"sdl2_ffi"
 local gllib = require"gl"
+cimguimodule = (flags.cimguimodule ~= nil) and flags.cimguimodule or nil
 local ig = require"imgui.sdl"
 
+jacktimebasemodule = (flags.jacktimebasemodule ~= nil) and flags.jacktimebasemodule or nil
+local jtb = require"libjacktimebase"
 
 gllib.set_loader(sdl)
 local gl, glc, glu, glext = gllib.libraries()
@@ -29,7 +33,7 @@ function sdl_setup()
     sdl.gL_SetAttribute(sdl.GL_CONTEXT_MINOR_VERSION, 1);
     local current = ffi.new("SDL_DisplayMode[1]")
     sdl.getCurrentDisplayMode(0, current);
-    local window = sdl.createWindow("JACK Timebase", sdl.WINDOWPOS_CENTERED, sdl.WINDOWPOS_CENTERED, 400, 150, sdl.WINDOW_OPENGL+sdl.WINDOW_RESIZABLE); 
+    local window = sdl.createWindow("JACK Timebase", sdl.WINDOWPOS_CENTERED, sdl.WINDOWPOS_CENTERED, 410, 110, sdl.WINDOW_OPENGL+sdl.WINDOW_RESIZABLE); 
     local gl_context = sdl.gL_CreateContext(window);
     sdl.gL_SetSwapInterval(1); -- Enable vsync
     return window, gl_context
@@ -47,14 +51,13 @@ sdl.SetWindowBordered(window, sdl.SDL_FALSE)
 ig_Impl = imgui_init()
 
 local igio = ig.GetIO()
--- ig.ImPlot_CreateContext()
 
-local jtb = require"libjacktimebase"
 local cli = jtb("libjacktimebase")
 cli:start_timebase(true)
 
 local beats = ffi.new("int[1]", 4)
-local beat_type = ffi.new("int[1]",4)
+local beat_type = ffi.new("int[1]",2)
+local tempo = ffi.new("float[1]",120.0)
 
 local done = false;
 local showdemo = ffi.new("bool[1]",false)
@@ -66,6 +69,9 @@ while (not done) do
         ig.lib.ImGui_ImplSDL2_ProcessEvent(event);
         if (event.type == sdl.KEYUP) and (event.key.keysym.sym == sdl.SDLK_ESCAPE) then
             done = true;
+        end
+        if (event.type == sdl.KEYUP) and (event.key.keysym.sym == sdl.SDLK_SPACE) then
+            cli:toggle()
         end
         if (event.type == sdl.QUIT) then
             done = true;
@@ -93,35 +99,23 @@ while (not done) do
     -- end
     
     local pos = cli:current_position()
-    ig.Text(string.format("%3d", pos.bar) .. "|" .. string.format("%2d", pos.beat) .. "|" .. string.format("%04d", pos.tick) .. "\tTime signature: " .. pos.beats_per_bar .. "/" .. pos.beat_type)
+    ig.Text("BBT: " .. string.format("%3d", pos.bar) .. "|" .. string.format("%2d", pos.beat) .. "|" .. string.format("%04d", pos.tick) .. "  " .. string.format("%2d  / %2d", beats[0], math.pow(2, beat_type[0])) .. "\t")
+    ig.SameLine()
+    ig.SetNextItemWidth(igio.DisplaySize.x/3);
+    if (ig.SliderFloat("BPM", tempo, 10.0, 400)) then
+        cli:set_tempo(tempo[0])
+    end
     
+    ig.SetNextItemWidth(igio.DisplaySize.x/4);
     if (ig.InputInt("Beats per bar", beats)) then
+        if beats[0] < 1 then beats[0] = 1 end
+        if beats[0] > 99 then beats[0] = 99 end
         cli:set_beats_per_bar(beats[0])
     end
-    
-    if (ig.RadioButton("Whole", beat_type[0] == 1)) then
-        beat_type[0] = 1
-        cli:set_beat_type(beat_type[0])
-    end
     ig.SameLine()
-    if (ig.RadioButton("Half", beat_type[0] == 2)) then
-        beat_type[0] = 2
-        cli:set_beat_type(beat_type[0])
-    end
-    ig.SameLine()
-    if (ig.RadioButton("Quarter", beat_type[0] == 4)) then
-        beat_type[0] = 4
-        cli:set_beat_type(beat_type[0])
-    end
-    ig.SameLine()
-    if (ig.RadioButton("8th", beat_type[0] == 8)) then
-        beat_type[0] = 8
-        cli:set_beat_type(beat_type[0])
-    end
-    ig.SameLine()
-    if (ig.RadioButton("16th", beat_type[0] == 16)) then
-        beat_type[0] = 16
-        cli:set_beat_type(beat_type[0])
+    ig.SetNextItemWidth(igio.DisplaySize.x/4);
+    if (ig.SliderInt("Beat type", beat_type, 0, 4, ffi.string(string.format("%d", math.pow(2, beat_type[0]))))) then
+        cli:set_beat_type(math.pow(2, beat_type[0]))
     end
     
     if (ig.Button("Play")) then
